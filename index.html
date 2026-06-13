@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head:
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>Fouzan Games & Charging Center | Payment Portal</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #eef2f7 0%, #d4dfed 100%);
+      min-height: 100vh;
+      padding: 0.8rem;
+      overflow-x: hidden;
+    }
+
+    @media (min-width: 640px) {
+      body { padding: 1rem; }
+    }
+    @media (min-width: 1024px) {
+      body { padding: 2rem 1.5rem; }
+    }
+
+    .main-content {
+      max-width: 1300px;
+      margin: 0 auto;
+      transition: filter 0.3s ease;
+      overflow-x: hidden;
+    }
+
+    .main-content.blurred {
+      filter: blur(4px);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .front-card {
+      background: white;
+      border-radius: 1.5rem;
+      box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .hero-section {
+      background: linear-gradient(135deg, #0b2b3f, #1a4a6e);
+      padding: 1rem;
+      color: white;
+      text-align: center;
+    }
+
+    .hero-section h1 {
+      font-size: 1.3rem;
+      word-break: break-word;
+    }
+    .hero-section p {
+      font-size: 0.75rem;
+    }
+
+    @media (min-width: 640px) {
+      .hero-section { padding: 1.2rem; }
+      .hero-section h1 { font-size: 1.6rem; }
+    }
+    @media (min-width: 1024px) {
+      .hero-section { padding: 1.8rem 2rem; }
+      .hero-section h1 { font-size: 2rem; }
+    }
+
+    .two-col-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      padding: 1rem;
+    }
+
+    @media (min-width: 900px) {
+      .two-col-grid {
+        grid-template-columns: 1fr 1.2fr;
+        gap: 1.5rem;
+        padding: 1.5rem;
+      }
+    }
+    @media (min-width: 1200px) {
+      .two-col-grid { gap: 2rem; padding: 2rem; }
+    }
+
+    .client-panel, .merchant-panel {
+      background: white;
+      border-radius: 1.2rem;
+      padding: 1rem;
+      border: 1px solid #e2edf7;
+      overflow-x: hidden;
+    }
+
+    .info-card {
+      background: #f1f5f9;
+      border-radius: 1rem;
+      padding: 0.8rem;
+      margin-top: 0.8rem;
+      font-size: 0.8rem;
+      word-break: break-word;
+    }
+
+    .info-card p {
+      margin: 0.4rem 0;
+    }
+
+    /* Form elements – always inside frame */
+    .form-group {
+      margin-bottom: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      width: 100%;
+    }
+
+    .form-group label {
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+
+    input, select {
+      padding: 0.6rem 0.7rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 0.9rem;
+      font-size: 0.8rem;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    @media (min-width: 640px) {
+      .form-group { margin-bottom: 1rem; }
+      .form-group label { font-size: 0.8rem; }
+      input, select { padding: 0.7rem 0.8rem; font-size: 0.85rem; }
+    }
+
+    input.readonly-field, select.readonly-field {
+      background-color: #f1f5f9;
+      cursor: not-allowed;
+    }
+
+    .radio-group-row {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      background: #f8fafc;
+      padding: 0.4rem 0.7rem;
+      border-radius: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .policy-confirm-area {
+      background: #f1f5f9;
+      border-radius: 1rem;
+      padding: 0.6rem 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin: 0.8rem 0;
+    }
+
+    .pay-button, .release-button, .gen-id-button, .reset-btn {
+      width: 100%;
+      padding: 0.65rem;
+      border: none;
+      border-radius: 2rem;
+      font-weight: 700;
+      margin-top: 0.6rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .pay-button { background: #f97316; color: white; }
+    .release-button { background: #2c7da0; color: white; }
+    .gen-id-button { background: #8b5cf6; color: white; width: auto; margin-top: 0; padding: 0.6rem 1rem; white-space: nowrap; }
+    .reset-btn { background: #e2e8f0; color: #1e293b; }
+
+    .ussd-output {
+      background: #f1f5f9;
+      border-radius: 1rem;
+      padding: 0.7rem;
+      margin-top: 0.8rem;
+      border-left: 4px solid #f97316;
+      word-break: break-all;
+    }
+
+    .copy-btn, .dial-btn {
+      background: #e2e8f0;
+      border: none;
+      padding: 0.3rem 0.7rem;
+      border-radius: 1rem;
+      cursor: pointer;
+      font-size: 0.7rem;
+      margin-right: 0.5rem;
+    }
+
+    /* Modals responsive */
+    .policy-modal-overlay, .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      visibility: hidden;
+      opacity: 0;
+      transition: visibility 0.2s, opacity 0.2s;
+    }
+
+    .policy-modal-overlay.active, .modal-overlay[style*="display: flex"] {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .policy-modal, .registration-modal {
+      background: white;
+      border-radius: 1.5rem;
+      max-width: 550px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #0b2b3f, #1a4a6e);
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .modal-body { padding: 1rem; }
+    .modal-footer { padding: 0.8rem 1rem 1rem; }
+
+    .btn-register {
+      background: #f97316;
+      color: white;
+      border: none;
+      padding: 0.7rem;
+      border-radius: 2rem;
+      font-weight: 700;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .error-text {
+      color: #dc2626;
+      font-size: 0.65rem;
+      margin-top: 0.2rem;
+    }
+
+    button, input, select {
+      max-width: 100%;
+    }
+
+    /* Auto-fill button style inside modal */
+    .auto-fill-btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+      font-weight: 600;
+      font-size: 0.75rem;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 0.5rem;
+      transition: background 0.2s;
+    }
+    .auto-fill-btn:hover {
+      background: #2563eb;
+    }
+    .inline-flex {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+
+<!-- REGISTRATION POPUP - default prefilled with FOUZAN GAMES details -->
+<div id="registrationModal" class="modal-overlay" style="display: flex;">
+  <div class="registration-modal">
+    <div class="modal-header"><h2>🎮 Fouzan Games & Charging Center</h2><p>Complete business profile to activate portal</p></div>
+    <div class="modal-body">
+      <!-- Auto-fill will set exact requested data, also initial fields are pre-filled manually on page load -->
+      <button id="autoFillRegistrationBtn" class="auto-fill-btn" style="margin-bottom: 0.75rem;">⚡ Load Business Details (Fouzan Games)</button>
+      
+      <div class="form-group"><label>🏢 Business Name *</label><input type="text" id="popupBizName" placeholder="Legal business name" value="Fouzan Games and Charging Center"></div>
+      <div class="form-group"><label>📍 Business Address *</label><input type="text" id="popupAddress" placeholder="Full address" value="No. 1 Davis Street, Kissy, Freetown"></div>
+      <div class="form-group"><label>📧 Email address *</label><input type="email" id="popupEmail" placeholder="contact@business.com" value="kargboslpha240@game.com"></div>
+      <div class="form-group"><label>👤 Recipient Name *</label><input type="text" id="popupRecipientName" placeholder="Full name of recipient" value="Alpha Kargbo"></div>
+      <div class="form-group"><label>📞 9-digit phone OR 6-digit agent code *</label><input type="text" id="popupIdentifier" placeholder="e.g., 761234567 or 892345" value="254596"><div id="popupIdentifierError" class="error-text"></div></div>
+      <div class="form-group"><label>💼 Your Position *</label><select id="popupPosition">
+          <option value="" disabled>– Select –</option>
+          <option value="Owner / CEO" selected>Owner / CEO</option>
+          <option>Manager</option>
+          <option>Accountant</option>
+          <option>Sales Representative</option>
+          <option>Operations Lead</option>
+          <option>Administrator</option>
+        </select></div>
+      <div id="popupModalError" class="error-text" style="background:#fee2e2; padding:0.5rem; border-radius:0.5rem; display:none;"></div>
+    </div>
+    <div class="modal-footer"><button id="confirmRegistrationBtn" class="btn-register">✅ Register & Continue</button></div>
+  </div>
+</div>
+
+<!-- POLICY MODAL -->
+<div id="policyModal" class="policy-modal-overlay">
+  <div class="policy-modal">
+    <div style="font-size: 2rem; text-align: center;">📜</div>
+    <p style="padding: 0 1rem;">
+      Dear valuable user!<br><br>
+      Fouzan Games & Charging Center thanks you for choosing our payment portal.<br><br>
+      Please double-check Names, Phone numbers, Amount, Addresses – mistakes may lead to miss‑transfers.<br><br>
+      If issues arise from our side we take responsibility. Use this application responsibly.
+    </p>
+    <div style="text-align: center; padding-bottom: 1.5rem;"><button id="policyOkBtn">OK, I Understand</button></div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content blurred" id="mainContent">
+  <div class="front-card">
+    <div class="hero-section"><h1>🎮 Fouzan Games & Charging Center</h1><p>DirectPay • Secure USSD • Fast Registration</p></div>
+    <div class="two-col-grid">
+      <!-- LEFT PANEL: Registered Business Info -->
+      <div class="client-panel">
+        <h3>🔐 Active Business Profile</h3>
+        <div class="info-card">
+          <p><strong>Business Name:</strong> <span id="displayBizName">—</span></p>
+          <p><strong>Address:</strong> <span id="displayAddress">—</span></p>
+          <p><strong>Identifier:</strong> <span id="displayIdentifier">—</span></p>
+          <p><strong>Position:</strong> <span id="displayPosition">—</span></p>
+          <p><strong>Recipient:</strong> <span id="displayRecipientName">—</span></p>
+        </div>
+        <button id="resetRegistrationBtn" class="reset-btn">🔄 Reset & Register New Business</button>
+      </div>
+      
+      <!-- RIGHT PANEL: Payment transaction form -->
+      <div class="merchant-panel">
+        <h3>💰 Payment / Transfer Details</h3>
+        
+        <div class="form-group"><label>Business Name</label><input type="text" id="merchantBizName" class="readonly-field" readonly></div>
+        <div class="form-group"><label>Address</label><input type="text" id="merchantAddress" class="readonly-field" readonly></div>
+        <div class="form-group"><label>Identifier (Phone/Code)</label><input type="text" id="merchantIdentifier" class="readonly-field" readonly></div>
+        <div class="form-group"><label>Position</label><input type="text" id="merchantPosition" class="readonly-field" readonly></div>
+        <div class="form-group"><label>🔢 Serial Number (Assigned)</label><input type="text" id="serialNumberField" class="readonly-field" readonly value="--"></div>
+        
+        <div class="form-group">
+          <label>💰 Amount (Leones) *</label>
+          <input type="number" id="amountInput" placeholder="Enter amount to transfer">
+          <div id="amountError" class="error-text"></div>
+        </div>
+        
+        <div class="form-group"><label>📝 Recipient Name *</label><input type="text" id="recipientNameField" class="readonly-field" readonly placeholder="Auto-filled from registration"></div>
+        
+        <div class="form-group"><label>📂 Transaction purpose *</label><select id="businessType">
+            <option value="" disabled selected>– Select –</option>
+            <option>Buy</option><option>Transfer</option><option>Osusu</option><option>Donation</option>
+            <option>Contribution</option><option>Subscription</option><option>Rent</option><option>Services</option>
+            <option>Gaming Credit</option><option>Charging Fee</option>
+        </select></div>
+        
+        <div class="form-group"><label>🔖 Transaction ID <span style="color:#dc2626;">*</span></label>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <input type="text" id="transactionIdField" class="readonly-field" readonly style="flex:1;">
+            <button id="generateIdBtn" class="gen-id-button">🔄 Generate</button>
+          </div>
+          <div id="txIdError" class="error-text"></div>
+        </div>
+        
+        <div class="form-group"><label>📄 Transaction agreement</label>
+          <div class="radio-group-row">
+            <label><input type="radio" name="transactionAgreement" value="Yes"> ✅ Yes, I confirm</label>
+            <label><input type="radio" name="transactionAgreement" value="No"> ❌ No</label>
+          </div>
+        </div>
+        
+        <div class="policy-confirm-area">
+          <button id="showPolicyBtn" style="background:#1e293b; color:white; border:none; padding:0.4rem 0.8rem; border-radius:2rem; font-size:0.75rem;">📜 Read Policy</button>
+          <span id="policyStatusMsg" style="color:#b91c1c; font-size:0.7rem;">⚠️ Not confirmed</span>
+        </div>
+        
+        <button id="releaseFundsBtn" class="release-button">📞 Release Funds (USSD Dialer)</button>
+        <div id="ussdOutputArea" style="display:none;" class="ussd-output">
+          <strong>Generated USSD Code:</strong><br>
+          <code id="ussdCodeText" style="word-break:break-all;"></code><br>
+          <button id="copyUssdBtn" class="copy-btn">📋 Copy</button>
+          <button id="dialUssdBtn" class="dial-btn">📞 Open Dialer</button>
+        </div>
+        
+        <button id="payBtn" class="pay-button">💰 PAY / SUBMIT</button>
+        <div id="merchantFeedback" style="display:none; margin-top:0.8rem; padding:0.6rem; border-radius:1rem; font-size:0.75rem;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // ========== CONFIGURATION ==========
+    const REGISTRATION_ENDPOINT = "https://formspree.io/f/xvznklyd";
+    const MERCHANT_ENDPOINT = "https://formspree.io/f/xeewandk";
+    const GROUP_ONE = ["076","074","073","079","078","075"];
+    const GROUP_TWO = ["077","088","099","080","090","030","070","033"];
+    
+    // Serial & TX ID management
+    let serialCounter = 1;
+    const SERIAL_KEY = "global_serial_counter";
+    function loadSerial() {
+      const stored = localStorage.getItem(SERIAL_KEY);
+      serialCounter = (stored && !isNaN(parseInt(stored))) ? parseInt(stored) : 1001;  // starting offset
+      localStorage.setItem(SERIAL_KEY, serialCounter);
+    }
+    function incrementSerial() { serialCounter++; localStorage.setItem(SERIAL_KEY, serialCounter); }
+    function randDigits(len) { return Math.floor(Math.random()*Math.pow(10,len)).toString().padStart(len,'0'); }
+    function genTxId() { return `FG${randDigits(6)}.${randDigits(4)}.T${randDigits(6)}`; }
+    
+    // DOM elements
+    const regModal = document.getElementById('registrationModal');
+    const mainContent = document.getElementById('mainContent');
+    const popupBiz = document.getElementById('popupBizName');
+    const popupAddr = document.getElementById('popupAddress');
+    const popupEmail = document.getElementById('popupEmail');
+    const popupRec = document.getElementById('popupRecipientName');
+    const popupId = document.getElementById('popupIdentifier');
+    const popupPos = document.getElementById('popupPosition');
+    const regBtn = document.getElementById('confirmRegistrationBtn');
+    const popupErrorSpan = document.getElementById('popupModalError');
+    const idHint = document.getElementById('popupIdentifierError');
+    const autoFillRegBtn = document.getElementById('autoFillRegistrationBtn');
+    
+    const mBiz = document.getElementById('merchantBizName');
+    const mAddr = document.getElementById('merchantAddress');
+    const mId = document.getElementById('merchantIdentifier');
+    const mPos = document.getElementById('merchantPosition');
+    const serialField = document.getElementById('serialNumberField');
+    const amount = document.getElementById('amountInput');
+    const amountErr = document.getElementById('amountError');
+    const recipientField = document.getElementById('recipientNameField');
+    const bizCat = document.getElementById('businessType');
+    const txField = document.getElementById('transactionIdField');
+    const genTx = document.getElementById('generateIdBtn');
+    const txErr = document.getElementById('txIdError');
+    const agreeRadios = document.querySelectorAll('input[name="transactionAgreement"]');
+    const showPolicyBtn = document.getElementById('showPolicyBtn');
+    const policyStatusSpan = document.getElementById('policyStatusMsg');
+    const release = document.getElementById('releaseFundsBtn');
+    const ussdArea = document.getElementById('ussdOutputArea');
+    const ussdCodeSpan = document.getElementById('ussdCodeText');
+    const copyUssd = document.getElementById('copyUssdBtn');
+    const dialUssd = document.getElementById('dialUssdBtn');
+    const pay = document.getElementById('payBtn');
+    const feedback = document.getElementById('merchantFeedback');
+    const resetAllBtn = document.getElementById('resetRegistrationBtn');
+    
+    const dispBiz = document.getElementById('displayBizName');
+    const dispAddr = document.getElementById('displayAddress');
+    const dispId = document.getElementById('displayIdentifier');
+    const dispPos = document.getElementById('displayPosition');
+    const dispRec = document.getElementById('displayRecipientName');
+    
+    // Policy modal logic
+    const policyModal = document.getElementById('policyModal');
+    const policyOk = document.getElementById('policyOkBtn');
+    let policyOkFlag = false;
+    
+    showPolicyBtn.onclick = () => policyModal.classList.add('active');
+    policyOk.onclick = () => {
+      policyOkFlag = true;
+      policyStatusSpan.innerHTML = "✅ Policy agreed";
+      policyStatusSpan.style.color = "#15803d";
+      policyModal.classList.remove('active');
+    };
+    
+    // Client (business) storage
+    function isRegistered() { return localStorage.getItem('clientRegistered') === 'true'; }
+    function saveClient(data) {
+      localStorage.setItem('clientRegistered', 'true');
+      localStorage.setItem('clientData', JSON.stringify(data));
+    }
+    function clearClient() {
+      localStorage.removeItem('clientRegistered');
+      localStorage.removeItem('clientData');
+    }
+    
+    function fillForms(data) {
+      mBiz.value = data.businessName || '';
+      mAddr.value = data.address || '';
+      mId.value = data.identifier || '';
+      mPos.value = data.position || '';
+      serialField.value = data.serialNumber || '--';
+      recipientField.value = data.recipientName || '';
+      dispBiz.innerText = data.businessName || '—';
+      dispAddr.innerText = data.address || '—';
+      dispId.innerText = data.identifier || '—';
+      dispPos.innerText = data.position || '—';
+      dispRec.innerText = data.recipientName || '—';
+    }
+    
+    // Pre-populate registration modal with exact required business details (Fouzan Games)
+    function setExactFouzanDetails() {
+      popupBiz.value = "Fouzan Games and Charging Center";
+      popupAddr.value = "No. 1 Davis Street, Kissy, Freetown";
+      popupEmail.value = "kargboslpha240@game.com";
+      popupRec.value = "Alpha Kargbo";
+      popupId.value = "254596";
+      // Ensure position 'Owner / CEO' selected
+      for(let i=0; i<popupPos.options.length; i++) {
+        if(popupPos.options[i].value === "Owner / CEO") {
+          popupPos.selectedIndex = i;
+          break;
+        }
+      }
+      if(idHint) idHint.innerText = "✓ 6-digit agent code loaded";
+      setTimeout(() => { if(idHint && idHint.innerText === "✓ 6-digit agent code loaded") idHint.innerText = ""; }, 2000);
+    }
+    
+    // Load session: if already registered, hide modal; else pre-fill with Fouzan Games data
+    function loadSession() {
+      if (isRegistered()) {
+        const saved = localStorage.getItem('clientData');
+        if (saved) { try { fillForms(JSON.parse(saved)); } catch(e) {} }
+        if (!txField.value) txField.value = genTxId();
+        regModal.style.display = 'none';
+        mainContent.classList.remove('blurred');
+      } else {
+        // Initial registration modal: auto-fill with Fouzan games info
+        setExactFouzanDetails();
+        regModal.style.display = 'flex';
+        mainContent.classList.add('blurred');
+        mBiz.value = ''; mAddr.value = ''; mId.value = ''; mPos.value = '';
+        serialField.value = '--'; recipientField.value = '';
+        dispBiz.innerText = '—'; dispAddr.innerText = '—';
+        dispId.innerText = '—'; dispPos.innerText = '—'; dispRec.innerText = '—';
+        txField.value = '';
+      }
+    }
+    
+    function showPopupErr(msg) {
+      popupErrorSpan.style.display = 'block';
+      popupErrorSpan.innerText = msg;
+      setTimeout(() => popupErrorSpan.style.display = 'none', 3000);
+    }
+    
+    function validateReg() {
+      const biz = popupBiz.value.trim();
+      const addr = popupAddr.value.trim();
+      const email = popupEmail.value.trim();
+      const rec = popupRec.value.trim();
+      const id = popupId.value.trim();
+      const pos = popupPos.value;
+      if (!biz || !addr || !email || !rec || !id || !pos) { showPopupErr("All fields required."); return false; }
+      if (!/^\S+@\S+\.\S+$/.test(email)) { showPopupErr("Invalid email."); return false; }
+      const is9d = /^\d{9}$/.test(id);
+      const is6c = /^[A-Za-z0-9]{6}$/.test(id);
+      if (!is9d && !is6c) { showPopupErr("Identifier: 9 digits or 6 alphanumeric."); return false; }
+      return true;
+    }
+    
+    // Auto-fill trigger for manual button click (also uses exact details)
+    function autoFillRegistration() {
+      setExactFouzanDetails();
+      const modalBody = document.querySelector('#registrationModal .modal-body');
+      let tempMsg = document.querySelector('.auto-fill-feedback');
+      if(tempMsg) tempMsg.remove();
+      const msgDiv = document.createElement('div');
+      msgDiv.innerText = "✅ Fouzan Games & Charging Center details loaded! Proceed to register.";
+      msgDiv.style.background = "#e0f2fe";
+      msgDiv.style.padding = "0.4rem";
+      msgDiv.style.borderRadius = "0.8rem";
+      msgDiv.style.fontSize = "0.7rem";
+      msgDiv.style.marginTop = "0.5rem";
+      msgDiv.style.textAlign = "center";
+      msgDiv.classList.add('auto-fill-feedback');
+      modalBody.appendChild(msgDiv);
+      setTimeout(() => msgDiv.remove(), 2200);
+    }
+    
+    if (autoFillRegBtn) autoFillRegBtn.addEventListener('click', autoFillRegistration);
+    
+    function completeRegistration() {
+      if (!validateReg()) return;
+      const serialNum = `FZ-${String(serialCounter).padStart(5,'0')}`;
+      const clientData = {
+        businessName: popupBiz.value.trim(),
+        address: popupAddr.value.trim(),
+        email: popupEmail.value.trim(),
+        recipientName: popupRec.value.trim(),
+        identifier: popupId.value.trim(),
+        position: popupPos.value,
+        serialNumber: serialNum,
+        registeredAt: new Date().toISOString()
+      };
+      saveClient(clientData);
+      fillForms(clientData);
+      incrementSerial();
+      txField.value = genTxId();
+      regModal.style.display = 'none';
+      mainContent.classList.remove('blurred');
+      
+      // Optionally send registration data
+      const fd = new FormData();
+      fd.append("type", "client_registration");
+      fd.append("business_name", clientData.businessName);
+      fd.append("address", clientData.address);
+      fd.append("email", clientData.email);
+      fd.append("recipient_name", clientData.recipientName);
+      fd.append("identifier", clientData.identifier);
+      fd.append("position", clientData.position);
+      fd.append("assigned_serial", clientData.serialNumber);
+      fetch(REGISTRATION_ENDPOINT, { method: "POST", body: fd }).catch(e=>console.log);
+    }
+    
+    function resetMerchantOnly() {
+      amount.value = '';
+      bizCat.value = '';
+      agreeRadios.forEach(r => r.checked = false);
+      amountErr.innerText = '';
+      ussdArea.style.display = 'none';
+      txField.value = genTxId();
+      txErr.innerText = '';
+      if (isRegistered()) {
+        const saved = localStorage.getItem('clientData');
+        if (saved) {
+          try { recipientField.value = JSON.parse(saved).recipientName || ''; } catch(e) {}
+        }
+      }
+    }
+    
+    function fullReset() {
+      clearClient();
+      mBiz.value = ''; mAddr.value = ''; mId.value = ''; mPos.value = '';
+      serialField.value = '--';
+      recipientField.value = '';
+      resetMerchantOnly();
+      policyOkFlag = false;
+      policyStatusSpan.innerHTML = "⚠️ Not confirmed";
+      policyStatusSpan.style.color = "#b91c1c";
+      dispBiz.innerText = '—'; dispAddr.innerText = '—';
+      dispId.innerText = '—'; dispPos.innerText = '—'; dispRec.innerText = '—';
+      txField.value = '';
+      ussdArea.style.display = 'none';
+      feedback.style.display = 'none';
+      regModal.style.display = 'flex';
+      mainContent.classList.add('blurred');
+      setExactFouzanDetails();   // re-populate modal with Fouzan details
+    }
+    
+    // USSD builder using identifier (phone number)
+    function buildUssd() {
+      const phone = mId.value.trim();
+      const amtVal = amount.value.trim();
+      if (!phone) { showFeedback("Identifier missing (9-digit phone required)", "error"); return null; }
+      if (!amtVal || isNaN(amtVal) || parseInt(amtVal) <= 0) {
+        amountErr.innerText = "Valid amount needed";
+        showFeedback("Enter valid amount", "error");
+        return null;
+      }
+      amountErr.innerText = "";
+      if (!/^\d{9}$/.test(phone)) { 
+        // if identifier is 6 digit code, we can treat but USSD requires phone. Show message
+        showFeedback("USSD requires 9-digit mobile number. Please update registration with a valid phone.", "error");
+        return null;
+      }
+      const pref = phone.substring(0,3);
+      const num = parseInt(amtVal);
+      if (GROUP_ONE.includes(pref)) return `#144*2*1*${phone}*${num}*${num}#`;
+      if (GROUP_TWO.includes(pref)) return `*161*1*1*${phone}*${num}*0000#`;
+      showFeedback(`Prefix ${pref} not supported`, "error");
+      return null;
+    }
+    
+    function dialNow(ussd) { window.location.href = `tel:${encodeURIComponent(ussd)}`; }
+    function handleRelease() {
+      if (!txField.value) { showFeedback("Generate Transaction ID first", "error"); return; }
+      const code = buildUssd();
+      if (code) { ussdCodeSpan.innerText = code; ussdArea.style.display = 'block'; dialNow(code); }
+      else ussdArea.style.display = 'none';
+    }
+    
+    function showFeedback(msg, type) {
+      feedback.style.display = 'block';
+      feedback.innerHTML = msg;
+      feedback.style.background = type === 'error' ? '#fee2e2' : '#e0f2fe';
+      feedback.style.borderLeft = `4px solid ${type === 'error' ? '#dc2626' : '#0284c7'}`;
+      if (type !== 'error') setTimeout(() => feedback.style.display = 'none', 5000);
+    }
+    
+    async function processPay() {
+      feedback.style.display = 'none';
+      ussdArea.style.display = 'none';
+      const biz = mBiz.value.trim(), addr = mAddr.value.trim(), iden = mId.value.trim(), pos = mPos.value.trim();
+      const serial = serialField.value.trim(), amt = amount.value.trim(), rec = recipientField.value.trim(), cat = bizCat.value, tx = txField.value.trim();
+      let agree = null;
+      for (let r of agreeRadios) if (r.checked) { agree = r.value; break; }
+      let clientEmail = "";
+      const stored = localStorage.getItem('clientData');
+      if (stored) { try { clientEmail = JSON.parse(stored).email || ""; } catch(e) {} }
+      if (!biz || !addr || !iden || !pos) { showFeedback("Business profile missing. Re-register.", "error"); return; }
+      if (!clientEmail) { showFeedback("Email missing. Re-register.", "error"); return; }
+      if (!amt || isNaN(amt) || parseInt(amt) <= 0) { amountErr.innerText = "Valid amount"; showFeedback("Enter amount", "error"); return; }
+      if (!rec) { showFeedback("Recipient name missing", "error"); return; }
+      if (!cat) { showFeedback("Select transaction purpose", "error"); return; }
+      if (!tx || !/^FG\d{6}\.\d{4}\.T\d{6}$/.test(tx)) { txErr.innerText = "Invalid TX format"; showFeedback("Invalid Transaction ID", "error"); return; }
+      if (agree !== "Yes") { showFeedback("Must confirm transaction agreement", "error"); return; }
+      if (!policyOkFlag) { showFeedback("Please accept the policy terms", "error"); return; }
+      if (!serial || serial === "--") { showFeedback("Serial number missing", "error"); return; }
+      
+      const formData = new FormData();
+      formData.append("type", "payment_submission");
+      formData.append("business_name", biz); formData.append("address", addr); formData.append("identifier", iden);
+      formData.append("position", pos); formData.append("email", clientEmail); formData.append("serial_number", serial);
+      formData.append("amount", amt); formData.append("recipient_name", rec); formData.append("category", cat);
+      formData.append("transaction_id", tx); formData.append("transaction_agreement", agree); formData.append("policy_confirmed", "Yes");
+      
+      pay.innerHTML = "⏳ Processing..."; pay.disabled = true;
+      try {
+        const res = await fetch(MERCHANT_ENDPOINT, { method: "POST", body: formData, headers: { 'Accept': 'application/json' } });
+        if (res.ok) { showFeedback(`✅ Payment submitted! Serial: ${serial} | TX: ${tx}`, "success"); resetMerchantOnly(); }
+        else { let err = await res.text(); showFeedback(`❌ Server error: ${err.substring(0,100)}`, "error"); }
+      } catch(e) { showFeedback(`Network error: ${e.message}`, "error"); }
+      finally { pay.innerHTML = "💰 PAY / SUBMIT"; pay.disabled = false; }
+    }
+    
+    // Event Listeners
+    regBtn.onclick = completeRegistration;
+    resetAllBtn.onclick = fullReset;
+    genTx.onclick = () => { txField.value = genTxId(); txErr.innerText = ""; showFeedback("New Transaction ID generated", "info"); };
+    release.onclick = handleRelease;
+    copyUssd.onclick = () => { if (ussdCodeSpan.innerText) { navigator.clipboard.writeText(ussdCodeSpan.innerText); copyUssd.innerText = "✅ Copied!"; setTimeout(() => copyUssd.innerText = "📋 Copy", 1500); } };
+    dialUssd.onclick = () => { if (ussdCodeSpan.innerText) dialNow(ussdCodeSpan.innerText); else showFeedback("No USSD", "error"); };
+    pay.onclick = processPay;
+    amount.oninput = () => { if (amount.value && parseInt(amount.value) > 0) amountErr.innerText = ""; else if (amount.value) amountErr.innerText = "Positive number"; else amountErr.innerText = ""; };
+    popupId.oninput = () => { const v = popupId.value.trim(); if (/^\d{9}$/.test(v)) idHint.innerText = "✓ Valid phone"; else if (/^[A-Za-z0-9]{6}$/.test(v)) idHint.innerText = "✓ Valid agent code"; else if (v.length > 0) idHint.innerText = "⚠️ 9 digits or 6 chars"; else idHint.innerText = ""; };
+    
+    loadSerial();
+    loadSession();
+  })();
+</script>
+</body>
+</html>
