@@ -1,758 +1,1189 @@
 <!DOCTYPE html>
 <html lang="en">
-<head:
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>Fouzan Games & Charging Center | Payment Portal</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AfriPay | Admin Dashboard</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='44' fill='%230a2b3c'/><text x='50' y='62' text-anchor='middle' font-family='Arial Black' font-size='40' font-weight='900' fill='%23FFD966'>AP</text></svg>">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+body {
+    background: linear-gradient(145deg, #eef2f7 0%, #d9e2ec 100%);
+    min-height: 100vh;
+    padding: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    color: #1e3b4a;
+}
 
-    body {
-      background: linear-gradient(135deg, #eef2f7 0%, #d4dfed 100%);
-      min-height: 100vh;
-      padding: 0.8rem;
-      overflow-x: hidden;
-    }
+/* ============================================================
+   DASHBOARD SHELL
+   ============================================================ */
+.wrap {
+    max-width: 1040px;
+    width: 100%;
+    background: #fff;
+    border-radius: 1.4rem;
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, .22);
+    overflow: hidden;
+}
+.head {
+    background: linear-gradient(135deg, #0a2b3c 0%, #1c4e6c 100%);
+    padding: 1rem 1.3rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.head h1 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #FFF, #FFD966, #6bc6ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: -0.4px;
+}
+.head .sub { font-size: .72rem; opacity: .8; margin-top: 2px; }
+.head .logout {
+    background: rgba(255, 255, 255, .15);
+    border: none;
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: .78rem;
+    transition: background .2s;
+}
+.head .logout:hover { background: rgba(255, 255, 255, .25); }
 
-    @media (min-width: 640px) {
-      body { padding: 1rem; }
-    }
-    @media (min-width: 1024px) {
-      body { padding: 2rem 1.5rem; }
-    }
+/* ============================================================
+   TAB BAR
+   ============================================================ */
+.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: .7rem .8rem;
+    border-bottom: 2px solid #e0e8f0;
+    background: #f8fafc;
+}
+.tab {
+    flex: 1;
+    min-width: 110px;
+    background: #eef2f7;
+    border: none;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #1c6e8f;
+    font-size: .78rem;
+    position: relative;
+    transition: all .15s ease;
+}
+.tab:hover { background: #e0ebf5; }
+.tab.active { background: #0f2b3d; color: #fff; }
+.tab .badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #e74c3c;
+    color: #fff;
+    font-size: .6rem;
+    padding: 1px 7px;
+    border-radius: 20px;
+    font-weight: 800;
+    box-shadow: 0 2px 6px rgba(231, 76, 60, .35);
+}
 
-    .main-content {
-      max-width: 1300px;
-      margin: 0 auto;
-      transition: filter 0.3s ease;
-      overflow-x: hidden;
-    }
+/* ============================================================
+   PANES
+   ============================================================ */
+.body { padding: 1rem 1.2rem 1.4rem; }
+.pane { display: none; }
+.pane.active { display: block; }
+.section-title {
+    font-weight: 800;
+    color: #1c6e8f;
+    font-size: .85rem;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    margin: .6rem 0 .4rem;
+    border-left: 3px solid #f4a261;
+    padding-left: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
 
-    .main-content.blurred {
-      filter: blur(4px);
-      pointer-events: none;
-      user-select: none;
-    }
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card {
+    background: #fff;
+    border: 1px solid #e2edf7;
+    border-radius: 12px;
+    padding: .7rem .9rem;
+    margin-bottom: .55rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .03);
+    transition: box-shadow .15s;
+}
+.card:hover { box-shadow: 0 4px 12px rgba(0, 0, 0, .06); }
+.card .top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+.card .title { font-weight: 800; color: #0f2b3d; font-size: .9rem; }
+.card .meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: .7rem;
+    color: #7f8c8d;
+    margin-bottom: 4px;
+}
+.card .meta span {
+    background: #f0f4f8;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+.card .mech {
+    font-size: .68rem;
+    color: #1c6e8f;
+    background: #eef7ff;
+    border: 1px dashed #a9cfe8;
+    border-radius: 8px;
+    padding: 5px 8px;
+    margin: 5px 0;
+    font-weight: 600;
+}
+.card .actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.empty {
+    text-align: center;
+    color: #95a5a6;
+    font-style: italic;
+    padding: 1rem;
+    font-size: .8rem;
+    background: #fafbfc;
+    border-radius: 10px;
+    border: 1px dashed #e2edf7;
+}
 
-    .front-card {
-      background: white;
-      border-radius: 1.5rem;
-      box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.25);
-      overflow: hidden;
-      width: 100%;
-    }
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn {
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    font-size: .72rem;
+    height: 32px;
+    transition: opacity .15s, transform .1s;
+}
+.btn:hover { opacity: .88; }
+.btn:active { transform: scale(.97); }
+.btn.approve { background: #27ae60; color: #fff; }
+.btn.reject  { background: #e74c3c; color: #fff; }
+.btn.neutral { background: #2c7da0; color: #fff; }
+.btn.grey    { background: #eef2f7; color: #1e3b4a; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
 
-    .hero-section {
-      background: linear-gradient(135deg, #0b2b3f, #1a4a6e);
-      padding: 1rem;
-      color: white;
-      text-align: center;
-    }
+/* ============================================================
+   AUTH GATE (Login + Register)
+   ============================================================ */
+.gate {
+    max-width: 420px;
+    margin: 2.4rem auto;
+    background: #fff;
+    border-radius: 1.4rem;
+    padding: 1.5rem 1.6rem 1.8rem;
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, .22);
+}
+.gate .brand { text-align: center; margin-bottom: 1rem; }
+.gate .brand .logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0f2b3d, #1c4e6c);
+    color: #FFD966;
+    font-family: 'Arial Black', sans-serif;
+    font-weight: 900;
+    font-size: 1.35rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto .5rem;
+    box-shadow: 0 6px 18px rgba(15, 43, 61, .3);
+    letter-spacing: -1px;
+}
+.gate .brand h2 { color: #0f2b3d; font-size: 1.15rem; font-weight: 800; }
+.gate .brand p { color: #7f8c8d; font-size: .74rem; margin-top: 2px; }
 
-    .hero-section h1 {
-      font-size: 1.3rem;
-      word-break: break-word;
-    }
-    .hero-section p {
-      font-size: 0.75rem;
-    }
+.gate-tabs {
+    display: flex;
+    gap: 4px;
+    background: #eef2f7;
+    border-radius: 30px;
+    padding: 4px;
+    margin-bottom: 1rem;
+}
+.gate-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 8px 10px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: .8rem;
+    cursor: pointer;
+    color: #1c6e8f;
+    transition: all .15s;
+}
+.gate-tab:hover { color: #0f2b3d; }
+.gate-tab.active {
+    background: #0f2b3d;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(15, 43, 61, .25);
+}
 
-    @media (min-width: 640px) {
-      .hero-section { padding: 1.2rem; }
-      .hero-section h1 { font-size: 1.6rem; }
-    }
-    @media (min-width: 1024px) {
-      .hero-section { padding: 1.8rem 2rem; }
-      .hero-section h1 { font-size: 2rem; }
-    }
+.gate-pane { display: none; }
+.gate-pane.active { display: block; }
 
-    .two-col-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1rem;
-      padding: 1rem;
-    }
+.field { margin-bottom: .65rem; text-align: left; }
+.field label {
+    display: block;
+    font-weight: 700;
+    color: #1e3b4a;
+    font-size: .72rem;
+    margin-bottom: 3px;
+}
+.field input {
+    width: 100%;
+    padding: 9px 14px;
+    border-radius: 30px;
+    border: 1.5px solid #d0dce8;
+    font-size: .88rem;
+    outline: none;
+    background: #fff;
+    transition: border-color .15s, box-shadow .15s;
+}
+.field input:focus {
+    border-color: #2c7da0;
+    box-shadow: 0 0 0 3px rgba(44, 125, 160, .15);
+}
+.field .hint { font-size: .62rem; color: #95a5a6; margin-top: 3px; }
 
-    @media (min-width: 900px) {
-      .two-col-grid {
-        grid-template-columns: 1fr 1.2fr;
-        gap: 1.5rem;
-        padding: 1.5rem;
-      }
-    }
-    @media (min-width: 1200px) {
-      .two-col-grid { gap: 2rem; padding: 2rem; }
-    }
+.gate button.primary {
+    width: 100%;
+    padding: 10px;
+    border-radius: 30px;
+    border: none;
+    background: #0f2b3d;
+    color: #fff;
+    font-weight: 800;
+    cursor: pointer;
+    font-size: .88rem;
+    margin-top: 4px;
+    transition: background .15s;
+}
+.gate button.primary:hover:not(:disabled) { background: #1c4e6c; }
+.gate button.primary:disabled { opacity: .55; cursor: not-allowed; }
 
-    .client-panel, .merchant-panel {
-      background: white;
-      border-radius: 1.2rem;
-      padding: 1rem;
-      border: 1px solid #e2edf7;
-      overflow-x: hidden;
-    }
+.gate .swap {
+    text-align: center;
+    margin-top: 12px;
+    font-size: .74rem;
+    color: #7f8c8d;
+}
+.gate .swap a {
+    color: #2c7da0;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+}
+.gate .swap a:hover { text-decoration: underline; }
 
-    .info-card {
-      background: #f1f5f9;
-      border-radius: 1rem;
-      padding: 0.8rem;
-      margin-top: 0.8rem;
-      font-size: 0.8rem;
-      word-break: break-word;
-    }
+.error {
+    color: #c0392b;
+    font-size: .72rem;
+    background: #fdecea;
+    border: 1px solid #f5c6c0;
+    padding: 6px 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    display: none;
+}
+.error.show { display: block; }
+.success {
+    color: #1e7e34;
+    font-size: .72rem;
+    background: #e8f8ef;
+    border: 1px solid #b8e0c8;
+    padding: 6px 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    display: none;
+}
+.success.show { display: block; }
 
-    .info-card p {
-      margin: 0.4rem 0;
-    }
+/* ============================================================
+   STAT ROW
+   ============================================================ */
+.stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: .5rem;
+    margin-bottom: .8rem;
+    padding: 1rem 1.2rem 0;
+}
+.stat {
+    background: linear-gradient(135deg, #0f2b3d, #1c4e6c);
+    color: #fff;
+    border-radius: 10px;
+    padding: .6rem .7rem;
+    text-align: center;
+}
+.stat .v {
+    font-size: 1.5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #FFD966, #6bc6ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 1.1;
+}
+.stat .l {
+    font-size: .62rem;
+    opacity: .85;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: .5px;
+    margin-top: 2px;
+}
 
-    /* Form elements – always inside frame */
-    .form-group {
-      margin-bottom: 0.9rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.3rem;
-      width: 100%;
-    }
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+.hidden { display: none !important; }
 
-    .form-group label {
-      font-weight: 600;
-      font-size: 0.75rem;
-    }
-
-    input, select {
-      padding: 0.6rem 0.7rem;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 0.9rem;
-      font-size: 0.8rem;
-      width: 100%;
-      max-width: 100%;
-    }
-
-    @media (min-width: 640px) {
-      .form-group { margin-bottom: 1rem; }
-      .form-group label { font-size: 0.8rem; }
-      input, select { padding: 0.7rem 0.8rem; font-size: 0.85rem; }
-    }
-
-    input.readonly-field, select.readonly-field {
-      background-color: #f1f5f9;
-      cursor: not-allowed;
-    }
-
-    .radio-group-row {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-      background: #f8fafc;
-      padding: 0.4rem 0.7rem;
-      border-radius: 2rem;
-      flex-wrap: wrap;
-    }
-
-    .policy-confirm-area {
-      background: #f1f5f9;
-      border-radius: 1rem;
-      padding: 0.6rem 0.8rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      margin: 0.8rem 0;
-    }
-
-    .pay-button, .release-button, .gen-id-button, .reset-btn {
-      width: 100%;
-      padding: 0.65rem;
-      border: none;
-      border-radius: 2rem;
-      font-weight: 700;
-      margin-top: 0.6rem;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-
-    .pay-button { background: #f97316; color: white; }
-    .release-button { background: #2c7da0; color: white; }
-    .gen-id-button { background: #8b5cf6; color: white; width: auto; margin-top: 0; padding: 0.6rem 1rem; white-space: nowrap; }
-    .reset-btn { background: #e2e8f0; color: #1e293b; }
-
-    .ussd-output {
-      background: #f1f5f9;
-      border-radius: 1rem;
-      padding: 0.7rem;
-      margin-top: 0.8rem;
-      border-left: 4px solid #f97316;
-      word-break: break-all;
-    }
-
-    .copy-btn, .dial-btn {
-      background: #e2e8f0;
-      border: none;
-      padding: 0.3rem 0.7rem;
-      border-radius: 1rem;
-      cursor: pointer;
-      font-size: 0.7rem;
-      margin-right: 0.5rem;
-    }
-
-    /* Modals responsive */
-    .policy-modal-overlay, .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      visibility: hidden;
-      opacity: 0;
-      transition: visibility 0.2s, opacity 0.2s;
-    }
-
-    .policy-modal-overlay.active, .modal-overlay[style*="display: flex"] {
-      visibility: visible;
-      opacity: 1;
-    }
-
-    .policy-modal, .registration-modal {
-      background: white;
-      border-radius: 1.5rem;
-      max-width: 550px;
-      width: 90%;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-
-    .modal-header {
-      background: linear-gradient(135deg, #0b2b3f, #1a4a6e);
-      color: white;
-      padding: 1rem;
-      text-align: center;
-    }
-
-    .modal-body { padding: 1rem; }
-    .modal-footer { padding: 0.8rem 1rem 1rem; }
-
-    .btn-register {
-      background: #f97316;
-      color: white;
-      border: none;
-      padding: 0.7rem;
-      border-radius: 2rem;
-      font-weight: 700;
-      width: 100%;
-      cursor: pointer;
-    }
-
-    .error-text {
-      color: #dc2626;
-      font-size: 0.65rem;
-      margin-top: 0.2rem;
-    }
-
-    button, input, select {
-      max-width: 100%;
-    }
-
-    /* Auto-fill button style inside modal */
-    .auto-fill-btn {
-      background: #3b82f6;
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 2rem;
-      font-weight: 600;
-      font-size: 0.75rem;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 0.5rem;
-      transition: background 0.2s;
-    }
-    .auto-fill-btn:hover {
-      background: #2563eb;
-    }
-    .inline-flex {
-      display: flex;
-      gap: 0.75rem;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-    }
-  </style>
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 600px) {
+    body { padding: .6rem; }
+    .head { padding: .8rem 1rem; }
+    .head h1 { font-size: 1.1rem; }
+    .body { padding: .8rem; }
+    .tab { font-size: .68rem; padding: 6px 6px; min-width: 85px; }
+    .gate { margin: 1rem auto; padding: 1.2rem; }
+    .stat-row { padding: .8rem .8rem 0; }
+    .stat .v { font-size: 1.2rem; }
+}
+</style>
 </head>
 <body>
 
-<!-- REGISTRATION POPUP - default prefilled with FOUZAN GAMES details -->
-<div id="registrationModal" class="modal-overlay" style="display: flex;">
-  <div class="registration-modal">
-    <div class="modal-header"><h2>🎮 Fouzan Games & Charging Center</h2><p>Complete business profile to activate portal</p></div>
-    <div class="modal-body">
-      <!-- Auto-fill will set exact requested data, also initial fields are pre-filled manually on page load -->
-      <button id="autoFillRegistrationBtn" class="auto-fill-btn" style="margin-bottom: 0.75rem;">⚡ Load Business Details (Fouzan Games)</button>
-      
-      <div class="form-group"><label>🏢 Business Name *</label><input type="text" id="popupBizName" placeholder="Legal business name" value="Fouzan Games and Charging Center"></div>
-      <div class="form-group"><label>📍 Business Address *</label><input type="text" id="popupAddress" placeholder="Full address" value="No. 1 Davis Street, Kissy, Freetown"></div>
-      <div class="form-group"><label>📧 Email address *</label><input type="email" id="popupEmail" placeholder="contact@business.com" value="kargboslpha240@game.com"></div>
-      <div class="form-group"><label>👤 Recipient Name *</label><input type="text" id="popupRecipientName" placeholder="Full name of recipient" value="Alpha Kargbo"></div>
-      <div class="form-group"><label>📞 9-digit phone OR 6-digit agent code *</label><input type="text" id="popupIdentifier" placeholder="e.g., 761234567 or 892345" value="254596"><div id="popupIdentifierError" class="error-text"></div></div>
-      <div class="form-group"><label>💼 Your Position *</label><select id="popupPosition">
-          <option value="" disabled>– Select –</option>
-          <option value="Owner / CEO" selected>Owner / CEO</option>
-          <option>Manager</option>
-          <option>Accountant</option>
-          <option>Sales Representative</option>
-          <option>Operations Lead</option>
-          <option>Administrator</option>
-        </select></div>
-      <div id="popupModalError" class="error-text" style="background:#fee2e2; padding:0.5rem; border-radius:0.5rem; display:none;"></div>
+<!-- ============================================================
+     AUTH GATE — LOGIN / REGISTER
+     ============================================================ -->
+<div id="gateScreen" class="gate">
+    <div class="brand">
+        <div class="logo">AP</div>
+        <h2>AfriPay Admin</h2>
+        <p>Sign in or create an admin account</p>
     </div>
-    <div class="modal-footer"><button id="confirmRegistrationBtn" class="btn-register">✅ Register & Continue</button></div>
-  </div>
+
+    <div class="gate-tabs">
+        <button type="button" class="gate-tab active" id="tabLogin">🔐 Login</button>
+        <button type="button" class="gate-tab" id="tabRegister">📝 Register</button>
+    </div>
+
+    <!-- ===== LOGIN PANE ===== -->
+    <div class="gate-pane active" id="paneLogin">
+        <div id="loginError" class="error"></div>
+        <div id="loginSuccess" class="success"></div>
+
+        <div class="field">
+            <label>Email *</label>
+            <input type="email" id="loginEmail" placeholder="admin@afripay.com" autocomplete="username" />
+        </div>
+        <div class="field">
+            <label>Password *</label>
+            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+            <div class="hint">Emergency bootstrap password works too.</div>
+        </div>
+
+        <button class="primary" id="loginBtn">Unlock Dashboard</button>
+
+        <div class="swap">Don't have an account? <a id="swapToRegister">Register →</a></div>
+    </div>
+
+    <!-- ===== REGISTER PANE ===== -->
+    <div class="gate-pane" id="paneRegister">
+        <div id="regError" class="error"></div>
+        <div id="regSuccess" class="success"></div>
+
+        <div class="field">
+            <label>Full Name *</label>
+            <input type="text" id="regFullName" placeholder="e.g. Amine Jalloh" autocomplete="name" />
+        </div>
+        <div class="field">
+            <label>Email *</label>
+            <input type="email" id="regEmail" placeholder="admin@afripay.com" autocomplete="email" />
+        </div>
+        <div class="field">
+            <label>Password *</label>
+            <input type="password" id="regPassword" placeholder="At least 6 characters" autocomplete="new-password" />
+        </div>
+        <div class="field">
+            <label>Confirm Password *</label>
+            <input type="password" id="regConfirm" placeholder="Repeat password" autocomplete="new-password" />
+        </div>
+        <div class="field">
+            <label>Admin Invite Code *</label>
+            <input type="password" id="regInvite" placeholder="Ask the platform owner" />
+            <div class="hint">Without the correct code, registration is blocked.</div>
+        </div>
+
+        <button class="primary" id="registerBtn">Create Admin Account</button>
+
+        <div class="swap">Already registered? <a id="swapToLogin">Login →</a></div>
+    </div>
 </div>
 
-<!-- POLICY MODAL -->
-<div id="policyModal" class="policy-modal-overlay">
-  <div class="policy-modal">
-    <div style="font-size: 2rem; text-align: center;">📜</div>
-    <p style="padding: 0 1rem;">
-      Dear valuable user!<br><br>
-      Fouzan Games & Charging Center thanks you for choosing our payment portal.<br><br>
-      Please double-check Names, Phone numbers, Amount, Addresses – mistakes may lead to miss‑transfers.<br><br>
-      If issues arise from our side we take responsibility. Use this application responsibly.
-    </p>
-    <div style="text-align: center; padding-bottom: 1.5rem;"><button id="policyOkBtn">OK, I Understand</button></div>
-  </div>
+<!-- ============================================================
+     DASHBOARD
+     ============================================================ -->
+<div id="dashScreen" class="wrap hidden">
+    <!-- Header -->
+    <div class="head">
+        <div>
+            <h1>🛡️ AfriPay Admin</h1>
+            <div class="sub">Approve agent-submitted items — approved items go live instantly</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+            <span id="whoAmI" style="font-size:.72rem;opacity:.85;"></span>
+            <button class="logout" id="logoutBtn">Logout</button>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-row">
+        <div class="stat"><div class="v" id="statPendingBiz">0</div><div class="l">Pending Biz</div></div>
+        <div class="stat"><div class="v" id="statPendingAgent">0</div><div class="l">Pending Agents</div></div>
+        <div class="stat"><div class="v" id="statPendingClient">0</div><div class="l">Pending Clients</div></div>
+        <div class="stat"><div class="v" id="statLiveBiz">0</div><div class="l">Live Businesses</div></div>
+        <div class="stat"><div class="v" id="statLiveAgent">0</div><div class="l">Live Agents</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab active" data-tab="pbiz">🏪 Pending Biz <span class="badge" id="badgePbiz" style="display:none">0</span></button>
+        <button class="tab" data-tab="pagent">🧑‍💼 Pending Agents <span class="badge" id="badgePagent" style="display:none">0</span></button>
+        <button class="tab" data-tab="pclient">👥 Pending Clients <span class="badge" id="badgePclient" style="display:none">0</span></button>
+        <button class="tab" data-tab="lbiz">✅ Live Businesses</button>
+        <button class="tab" data-tab="lagent">✅ Live Agents</button>
+        <button class="tab" data-tab="lclient">✅ Live Clients</button>
+        <button class="tab" data-tab="reviewed">🗂️ Reviewed</button>
+    </div>
+
+    <!-- Panes -->
+    <div class="body">
+        <div class="pane active" id="pane-pbiz">
+            <div class="section-title">Pending Businesses</div>
+            <div id="listPbiz"></div>
+        </div>
+        <div class="pane" id="pane-pagent">
+            <div class="section-title">Pending Agents</div>
+            <div id="listPagent"></div>
+        </div>
+        <div class="pane" id="pane-pclient">
+            <div class="section-title">Pending Clients</div>
+            <div id="listPclient"></div>
+        </div>
+        <div class="pane" id="pane-lbiz">
+            <div class="section-title">Live Businesses</div>
+            <div id="listLbiz"></div>
+        </div>
+        <div class="pane" id="pane-lagent">
+            <div class="section-title">Live Agents</div>
+            <div id="listLagent"></div>
+        </div>
+        <div class="pane" id="pane-lclient">
+            <div class="section-title">Live Clients</div>
+            <div id="listLclient"></div>
+        </div>
+        <div class="pane" id="pane-reviewed">
+            <div class="section-title">Reviewed (last 50)</div>
+            <div id="listReviewed"></div>
+        </div>
+    </div>
 </div>
 
-<!-- MAIN CONTENT -->
-<div class="main-content blurred" id="mainContent">
-  <div class="front-card">
-    <div class="hero-section"><h1>🎮 Fouzan Games & Charging Center</h1><p>DirectPay • Secure USSD • Fast Registration</p></div>
-    <div class="two-col-grid">
-      <!-- LEFT PANEL: Registered Business Info -->
-      <div class="client-panel">
-        <h3>🔐 Active Business Profile</h3>
-        <div class="info-card">
-          <p><strong>Business Name:</strong> <span id="displayBizName">—</span></p>
-          <p><strong>Address:</strong> <span id="displayAddress">—</span></p>
-          <p><strong>Identifier:</strong> <span id="displayIdentifier">—</span></p>
-          <p><strong>Position:</strong> <span id="displayPosition">—</span></p>
-          <p><strong>Recipient:</strong> <span id="displayRecipientName">—</span></p>
-        </div>
-        <button id="resetRegistrationBtn" class="reset-btn">🔄 Reset & Register New Business</button>
-      </div>
-      
-      <!-- RIGHT PANEL: Payment transaction form -->
-      <div class="merchant-panel">
-        <h3>💰 Payment / Transfer Details</h3>
-        
-        <div class="form-group"><label>Business Name</label><input type="text" id="merchantBizName" class="readonly-field" readonly></div>
-        <div class="form-group"><label>Address</label><input type="text" id="merchantAddress" class="readonly-field" readonly></div>
-        <div class="form-group"><label>Identifier (Phone/Code)</label><input type="text" id="merchantIdentifier" class="readonly-field" readonly></div>
-        <div class="form-group"><label>Position</label><input type="text" id="merchantPosition" class="readonly-field" readonly></div>
-        <div class="form-group"><label>🔢 Serial Number (Assigned)</label><input type="text" id="serialNumberField" class="readonly-field" readonly value="--"></div>
-        
-        <div class="form-group">
-          <label>💰 Amount (Leones) *</label>
-          <input type="number" id="amountInput" placeholder="Enter amount to transfer">
-          <div id="amountError" class="error-text"></div>
-        </div>
-        
-        <div class="form-group"><label>📝 Recipient Name *</label><input type="text" id="recipientNameField" class="readonly-field" readonly placeholder="Auto-filled from registration"></div>
-        
-        <div class="form-group"><label>📂 Transaction purpose *</label><select id="businessType">
-            <option value="" disabled selected>– Select –</option>
-            <option>Buy</option><option>Transfer</option><option>Osusu</option><option>Donation</option>
-            <option>Contribution</option><option>Subscription</option><option>Rent</option><option>Services</option>
-            <option>Gaming Credit</option><option>Charging Fee</option>
-        </select></div>
-        
-        <div class="form-group"><label>🔖 Transaction ID <span style="color:#dc2626;">*</span></label>
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <input type="text" id="transactionIdField" class="readonly-field" readonly style="flex:1;">
-            <button id="generateIdBtn" class="gen-id-button">🔄 Generate</button>
-          </div>
-          <div id="txIdError" class="error-text"></div>
-        </div>
-        
-        <div class="form-group"><label>📄 Transaction agreement</label>
-          <div class="radio-group-row">
-            <label><input type="radio" name="transactionAgreement" value="Yes"> ✅ Yes, I confirm</label>
-            <label><input type="radio" name="transactionAgreement" value="No"> ❌ No</label>
-          </div>
-        </div>
-        
-        <div class="policy-confirm-area">
-          <button id="showPolicyBtn" style="background:#1e293b; color:white; border:none; padding:0.4rem 0.8rem; border-radius:2rem; font-size:0.75rem;">📜 Read Policy</button>
-          <span id="policyStatusMsg" style="color:#b91c1c; font-size:0.7rem;">⚠️ Not confirmed</span>
-        </div>
-        
-        <button id="releaseFundsBtn" class="release-button">📞 Release Funds (USSD Dialer)</button>
-        <div id="ussdOutputArea" style="display:none;" class="ussd-output">
-          <strong>Generated USSD Code:</strong><br>
-          <code id="ussdCodeText" style="word-break:break-all;"></code><br>
-          <button id="copyUssdBtn" class="copy-btn">📋 Copy</button>
-          <button id="dialUssdBtn" class="dial-btn">📞 Open Dialer</button>
-        </div>
-        
-        <button id="payBtn" class="pay-button">💰 PAY / SUBMIT</button>
-        <div id="merchantFeedback" style="display:none; margin-top:0.8rem; padding:0.6rem; border-radius:1rem; font-size:0.75rem;"></div>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- Toast -->
+<div id="toast" style="position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#1e2f3c;color:#fff;padding:8px 20px;border-radius:40px;font-size:.85rem;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;text-align:center;max-width:85%;"></div>
 
 <script>
-  (function() {
-    // ========== CONFIGURATION ==========
-    const REGISTRATION_ENDPOINT = "https://formspree.io/f/xvznklyd";
-    const MERCHANT_ENDPOINT = "https://formspree.io/f/xeewandk";
-    const GROUP_ONE = ["076","074","073","079","078","075"];
-    const GROUP_TWO = ["077","088","099","080","090","030","070","033"];
-    
-    // Serial & TX ID management
-    let serialCounter = 1;
-    const SERIAL_KEY = "global_serial_counter";
-    function loadSerial() {
-      const stored = localStorage.getItem(SERIAL_KEY);
-      serialCounter = (stored && !isNaN(parseInt(stored))) ? parseInt(stored) : 1001;  // starting offset
-      localStorage.setItem(SERIAL_KEY, serialCounter);
+/* ============================================================
+   AFRI-PAY ADMIN DASHBOARD — FULL APP SCRIPT
+   ============================================================ */
+
+/* ---------------- CONFIG ---------------- */
+const SUPABASE_URL = 'https://adxtvefswcosnooezdha.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkeHR2ZWZzd2Nvc25vb2V6ZGhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNzU1NzQsImV4cCI6MjEwNDY1MTU3NH0.zfeZdUzCHcRCcBCkgrtvp5uriqcK0FyI5xGiHNMk42A';
+
+/* 🔑 CHANGE THESE.
+   BOOTSTRAP_PASSWORD = emergency login (works before any admin exists)
+   ADMIN_INVITE_CODE  = required to register a new admin
+   Keep them equal the FIRST time so you can log in and register yourself.
+   After your own account is created, you can leave them or change them. */
+const BOOTSTRAP_PASSWORD = 'AfriPay#Admin2026';
+const ADMIN_INVITE_CODE  = 'AfriPay#Admin2026';
+
+/* ---------------- SUPABASE INIT ---------------- */
+let sb = null;
+try {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('✅ Supabase client ready');
+} catch (e) {
+    console.error('❌ Supabase init failed:', e);
+}
+
+/* ---------------- SHORTCUTS ---------------- */
+const $ = function(id) { return document.getElementById(id); };
+
+function toast(msg, dur) {
+    dur = dur || 2400;
+    const t = $('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.style.opacity = '1';
+    clearTimeout(t._t);
+    t._t = setTimeout(function() { t.style.opacity = '0'; }, dur);
+}
+function esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, function(c) {
+        return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c];
+    });
+}
+function when(ts) { return ts ? new Date(ts).toLocaleString() : '—'; }
+
+/* ============================================================
+   PASSWORD HASHING  (SHA-256 + fixed salt)
+   ============================================================ */
+async function hashPassword(pw) {
+    const enc = new TextEncoder().encode('afripay_admin_salt_v1:' + pw);
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf))
+        .map(function(b) { return b.toString(16).padStart(2, '0'); })
+        .join('');
+}
+
+/* ============================================================
+   SESSION
+   ============================================================ */
+let currentAdmin = null;
+
+function saveSession(obj) {
+    try { sessionStorage.setItem('afripay_admin_session', JSON.stringify(obj)); } catch (e) {}
+}
+function loadSession() {
+    try {
+        const s = sessionStorage.getItem('afripay_admin_session');
+        return s ? JSON.parse(s) : null;
+    } catch (e) { return null; }
+}
+function clearSession() {
+    try { sessionStorage.removeItem('afripay_admin_session'); } catch (e) {}
+    currentAdmin = null;
+}
+
+/* ============================================================
+   GATE — TABS & MESSAGES
+   ============================================================ */
+function activateGateTab(which) {
+    const isLogin = which === 'login';
+    $('tabLogin').classList.toggle('active', isLogin);
+    $('tabRegister').classList.toggle('active', !isLogin);
+    $('paneLogin').classList.toggle('active', isLogin);
+    $('paneRegister').classList.toggle('active', !isLogin);
+    hideMsgs();
+    setTimeout(function() {
+        const inp = isLogin ? $('loginEmail') : $('regFullName');
+        if (inp) inp.focus();
+    }, 100);
+}
+function hideMsgs() {
+    ['loginError', 'loginSuccess', 'regError', 'regSuccess'].forEach(function(id) {
+        const el = $(id);
+        if (el) { el.textContent = ''; el.classList.remove('show'); }
+    });
+}
+function showErr(id, msg) {
+    const el = $(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+}
+function showOk(id, msg) {
+    const el = $(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+}
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+async function tryLogin() {
+    hideMsgs();
+    const email = ($('loginEmail').value || '').trim().toLowerCase();
+    const password = $('loginPassword').value || '';
+
+    if (!email && !password) { showErr('loginError', '❌ Enter email and password.'); return; }
+    if (!email) { showErr('loginError', '❌ Enter your email.'); return; }
+    if (!password) { showErr('loginError', '❌ Enter your password.'); return; }
+
+    const btn = $('loginBtn');
+    const orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Checking…';
+
+    try {
+        // 1. Bootstrap fallback (emergency)
+        if (password === BOOTSTRAP_PASSWORD) {
+            currentAdmin = { fullName: 'Bootstrap Admin', email: email || 'bootstrap', bootstrap: true };
+            saveSession(currentAdmin);
+            showOk('loginSuccess', '✅ Bootstrap access granted.');
+            await new Promise(function(r) { setTimeout(r, 350); });
+            showDashboard();
+            return;
+        }
+
+        // 2. Check admin_users
+        const hash = await hashPassword(password);
+        const res = await sb.from('admin_users')
+            .select('id, full_name, email, password')
+            .eq('email', email)
+            .limit(1);
+
+        if (res.error) throw res.error;
+        const row = res.data && res.data[0];
+        if (!row || row.password !== hash) {
+            showErr('loginError', '❌ Invalid email or password.');
+            return;
+        }
+
+        currentAdmin = { id: row.id, fullName: row.full_name || 'Admin', email: row.email };
+        saveSession(currentAdmin);
+        showOk('loginSuccess', '✅ Welcome back, ' + (row.full_name || row.email) + '!');
+        await new Promise(function(r) { setTimeout(r, 350); });
+        showDashboard();
+    } catch (e) {
+        console.error('login failed:', e);
+        showErr('loginError', '❌ ' + (e.message || 'Login failed. Try again.'));
+    } finally {
+        btn.disabled = false;
+        btn.textContent = orig;
     }
-    function incrementSerial() { serialCounter++; localStorage.setItem(SERIAL_KEY, serialCounter); }
-    function randDigits(len) { return Math.floor(Math.random()*Math.pow(10,len)).toString().padStart(len,'0'); }
-    function genTxId() { return `FG${randDigits(6)}.${randDigits(4)}.T${randDigits(6)}`; }
-    
-    // DOM elements
-    const regModal = document.getElementById('registrationModal');
-    const mainContent = document.getElementById('mainContent');
-    const popupBiz = document.getElementById('popupBizName');
-    const popupAddr = document.getElementById('popupAddress');
-    const popupEmail = document.getElementById('popupEmail');
-    const popupRec = document.getElementById('popupRecipientName');
-    const popupId = document.getElementById('popupIdentifier');
-    const popupPos = document.getElementById('popupPosition');
-    const regBtn = document.getElementById('confirmRegistrationBtn');
-    const popupErrorSpan = document.getElementById('popupModalError');
-    const idHint = document.getElementById('popupIdentifierError');
-    const autoFillRegBtn = document.getElementById('autoFillRegistrationBtn');
-    
-    const mBiz = document.getElementById('merchantBizName');
-    const mAddr = document.getElementById('merchantAddress');
-    const mId = document.getElementById('merchantIdentifier');
-    const mPos = document.getElementById('merchantPosition');
-    const serialField = document.getElementById('serialNumberField');
-    const amount = document.getElementById('amountInput');
-    const amountErr = document.getElementById('amountError');
-    const recipientField = document.getElementById('recipientNameField');
-    const bizCat = document.getElementById('businessType');
-    const txField = document.getElementById('transactionIdField');
-    const genTx = document.getElementById('generateIdBtn');
-    const txErr = document.getElementById('txIdError');
-    const agreeRadios = document.querySelectorAll('input[name="transactionAgreement"]');
-    const showPolicyBtn = document.getElementById('showPolicyBtn');
-    const policyStatusSpan = document.getElementById('policyStatusMsg');
-    const release = document.getElementById('releaseFundsBtn');
-    const ussdArea = document.getElementById('ussdOutputArea');
-    const ussdCodeSpan = document.getElementById('ussdCodeText');
-    const copyUssd = document.getElementById('copyUssdBtn');
-    const dialUssd = document.getElementById('dialUssdBtn');
-    const pay = document.getElementById('payBtn');
-    const feedback = document.getElementById('merchantFeedback');
-    const resetAllBtn = document.getElementById('resetRegistrationBtn');
-    
-    const dispBiz = document.getElementById('displayBizName');
-    const dispAddr = document.getElementById('displayAddress');
-    const dispId = document.getElementById('displayIdentifier');
-    const dispPos = document.getElementById('displayPosition');
-    const dispRec = document.getElementById('displayRecipientName');
-    
-    // Policy modal logic
-    const policyModal = document.getElementById('policyModal');
-    const policyOk = document.getElementById('policyOkBtn');
-    let policyOkFlag = false;
-    
-    showPolicyBtn.onclick = () => policyModal.classList.add('active');
-    policyOk.onclick = () => {
-      policyOkFlag = true;
-      policyStatusSpan.innerHTML = "✅ Policy agreed";
-      policyStatusSpan.style.color = "#15803d";
-      policyModal.classList.remove('active');
+}
+
+/* ============================================================
+   REGISTER
+   ============================================================ */
+async function tryRegister() {
+    hideMsgs();
+    const fullName = ($('regFullName').value || '').trim();
+    const email = ($('regEmail').value || '').trim().toLowerCase();
+    const pw = $('regPassword').value || '';
+    const confirm = $('regConfirm').value || '';
+    const invite = $('regInvite').value || '';
+
+    if (!fullName) { showErr('regError', '❌ Full name is required.'); return; }
+    if (!email || email.indexOf('@') === -1) { showErr('regError', '❌ Enter a valid email.'); return; }
+    if (pw.length < 6) { showErr('regError', '❌ Password must be at least 6 characters.'); return; }
+    if (pw !== confirm) { showErr('regError', '❌ Passwords do not match.'); return; }
+    if (invite !== ADMIN_INVITE_CODE) { showErr('regError', '❌ Invalid Admin Invite Code.'); return; }
+
+    const btn = $('registerBtn');
+    const orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '⏳ Creating…';
+
+    try {
+        // Email collision check
+        const exists = await sb.from('admin_users')
+            .select('id').eq('email', email).limit(1);
+        if (exists.error) throw exists.error;
+        if (exists.data && exists.data.length) {
+            showErr('regError', '❌ An admin with this email already exists.');
+            return;
+        }
+
+        const hash = await hashPassword(pw);
+        const ins = await sb.from('admin_users')
+            .insert({ full_name: fullName, email: email, password: hash })
+            .select()
+            .single();
+        if (ins.error) throw ins.error;
+
+        showOk('regSuccess', '✅ Admin account created! You can now log in.');
+        toast('✅ Admin registered');
+
+        // Pre-fill login form
+        $('loginEmail').value = email;
+        $('loginPassword').value = '';
+
+        // Clear register form
+        ['regFullName', 'regEmail', 'regPassword', 'regConfirm', 'regInvite'].forEach(function(id) {
+            const el = $(id); if (el) el.value = '';
+        });
+
+        setTimeout(function() { activateGateTab('login'); }, 900);
+    } catch (e) {
+        console.error('register failed:', e);
+        showErr('regError', '❌ ' + (e.message || 'Registration failed.'));
+    } finally {
+        btn.disabled = false;
+        btn.textContent = orig;
+    }
+}
+
+/* ============================================================
+   SHOW / HIDE SCREENS
+   ============================================================ */
+function showDashboard() {
+    $('gateScreen').classList.add('hidden');
+    $('dashScreen').classList.remove('hidden');
+    if (currentAdmin && $('whoAmI')) {
+        $('whoAmI').textContent = '👋 ' + (currentAdmin.fullName || currentAdmin.email || 'Admin');
+    }
+    refreshAll();
+    subscribeRealtime();
+}
+function logout() {
+    clearSession();
+    location.reload();
+}
+
+/* ============================================================
+   DATA STORES + LOADERS
+   ============================================================ */
+let allPending = [];
+let allBiz = [];
+let allAgents = [];
+let allClients = [];
+
+async function loadPending() {
+    const res = await sb.from('pending_items').select('*')
+        .order('submitted_at', { ascending: false }).limit(500);
+    if (res.error) { console.error(res.error); return []; }
+    return res.data || [];
+}
+async function loadBusinesses() {
+    const res = await sb.from('businesses').select('*').order('name');
+    if (res.error) { console.error(res.error); return []; }
+    return res.data || [];
+}
+async function loadAgents() {
+    const res = await sb.from('agents').select('*').order('business_name');
+    if (res.error) { console.error(res.error); return []; }
+    return res.data || [];
+}
+async function loadClients() {
+    const res = await sb.from('agent_clients').select('*')
+        .order('created_at', { ascending: false }).limit(500);
+    if (res.error) { console.error(res.error); return []; }
+    return res.data || [];
+}
+async function refreshAll() {
+    try {
+        allPending = await loadPending();
+        allBiz = await loadBusinesses();
+        allAgents = await loadAgents();
+        allClients = await loadClients();
+        renderAll();
+    } catch (e) {
+        console.error('refreshAll failed:', e);
+    }
+}
+
+/* ============================================================
+   RENDERERS
+   ============================================================ */
+function renderAll() {
+    renderPending('listPbiz', 'business', 'badgePbiz', 'statPendingBiz');
+    renderPending('listPagent', 'agent', 'badgePagent', 'statPendingAgent');
+    renderPending('listPclient', 'client', 'badgePclient', 'statPendingClient');
+    renderLiveBiz();
+    renderLiveAgent();
+    renderLiveClient();
+    renderReviewed();
+    if ($('statLiveBiz')) $('statLiveBiz').textContent = allBiz.length;
+    if ($('statLiveAgent')) $('statLiveAgent').textContent = allAgents.length;
+}
+
+function pendingOf(type) {
+    return allPending.filter(function(p) {
+        return p.type === type && p.status === 'pending';
+    });
+}
+function reviewedOf() {
+    return allPending.filter(function(p) { return p.status !== 'pending'; }).slice(0, 50);
+}
+
+function renderPending(containerId, type, badgeId, statId) {
+    const items = pendingOf(type);
+    const c = $(containerId);
+    if (!c) return;
+    if ($(badgeId)) {
+        $(badgeId).textContent = items.length;
+        $(badgeId).style.display = items.length ? 'inline-block' : 'none';
+    }
+    if ($(statId)) $(statId).textContent = items.length;
+    if (!items.length) {
+        c.innerHTML = '<div class="empty">Nothing pending 🎉</div>';
+        return;
+    }
+    c.innerHTML = items.map(pendingCard).join('');
+    c.querySelectorAll('[data-approve]').forEach(function(b) {
+        b.onclick = function() { approveItem(b.getAttribute('data-approve')); };
+    });
+    c.querySelectorAll('[data-reject]').forEach(function(b) {
+        b.onclick = function() { rejectItem(b.getAttribute('data-reject')); };
+    });
+}
+
+function pendingCard(it) {
+    const d = it.data || {};
+    const icon = it.type === 'agent' ? '🧑‍💼' : (it.type === 'client' ? '👤' : '🏪');
+    const title = d.businessName || d.name || 'Item';
+    let meta = '';
+    if (it.type === 'agent') {
+        meta = '<span>📱 ' + esc(d.mobileMoney || '—') + '</span>' +
+               '<span>📍 ' + esc(d.city || '—') + '</span>' +
+               '<span>💳 ' + (d.collateralLimit || 0) + '</span>';
+    } else if (it.type === 'client') {
+        meta = '<span>📱 ' + esc(d.phone || '—') + '</span>' +
+               '<span>📍 ' + esc(d.city || '—') + '</span>' +
+               '<span>🌍 ' + esc(d.country || '—') + '</span>';
+    } else {
+        meta = '<span>📞 ' + esc(d.contact || '—') + '</span>' +
+               '<span>🏷️ ' + esc(d.type || '—') + '</span>' +
+               '<span>📍 ' + esc(d.city || '—') + '</span>';
+    }
+    let mech = '';
+    if (it.type === 'business' && d.mechanisms) {
+        const m = d.mechanisms;
+        mech = '<div class="mech">💳 ' + esc((m.payMethods || []).join(', ') || '—') +
+               '  ·  🔐 ' + esc(m.authMethod || '—') +
+               '  ·  🚚 ' + esc(m.deliveryMode || '—') +
+               (m.deliveryFee ? '  ·  Fee ' + esc(String(m.deliveryFee)) : '') + '</div>';
+    }
+    return '<div class="card">' +
+        '<div class="top">' +
+            '<span class="title">' + icon + ' ' + esc(title) + '</span>' +
+            '<span style="font-size:.62rem;color:#e67e22;">⏳ Pending</span>' +
+        '</div>' +
+        '<div class="meta">' + meta + '</div>' + mech +
+        '<div class="meta">' +
+            '<span>🌍 ' + esc(it.country || '—') + '</span>' +
+            '<span>👤 by ' + esc(it.submitted_by || '—') + '</span>' +
+            '<span>🕒 ' + esc(when(it.submitted_at)) + '</span>' +
+        '</div>' +
+        '<div class="actions">' +
+            '<button class="btn approve" data-approve="' + esc(it.id) + '">✅ Approve</button>' +
+            '<button class="btn reject" data-reject="' + esc(it.id) + '">❌ Reject</button>' +
+        '</div>' +
+    '</div>';
+}
+
+function liveCard(icon, title, sub, meta) {
+    return '<div class="card">' +
+        '<div class="top">' +
+            '<span class="title">' + icon + ' ' + esc(title) + '</span>' +
+            '<span style="font-size:.62rem;color:#27ae60;">✅ Live</span>' +
+        '</div>' +
+        (sub ? '<div style="font-size:.75rem;color:#1e3b4a;margin-bottom:3px;">' + esc(sub) + '</div>' : '') +
+        '<div class="meta">' + meta + '</div>' +
+    '</div>';
+}
+
+function renderLiveBiz() {
+    const c = $('listLbiz');
+    if (!allBiz.length) { c.innerHTML = '<div class="empty">No live businesses yet.</div>'; return; }
+    c.innerHTML = allBiz.map(function(b) {
+        const meta = '<span>📞 ' + esc(b.contact || '—') + '</span>' +
+                     '<span>🏷️ ' + esc(b.type || '—') + '</span>' +
+                     '<span>📍 ' + esc(b.city || '—') + '</span>';
+        return liveCard(b.icon || '🏪', b.name || '—', null, meta);
+    }).join('');
+}
+function renderLiveAgent() {
+    const c = $('listLagent');
+    if (!allAgents.length) { c.innerHTML = '<div class="empty">No live agents yet.</div>'; return; }
+    c.innerHTML = allAgents.map(function(a) {
+        const meta = '<span>📱 ' + esc(a.mobile_money || '—') + '</span>' +
+                     '<span>📍 ' + esc(a.city || '—') + '</span>' +
+                     '<span>💳 ' + (a.collateral_limit || 0) + '</span>' +
+                     '<span>🌍 ' + esc(a.country_code || '—') + '</span>';
+        return liveCard('🧑‍💼', a.business_name || '—', a.owner_name || '', meta);
+    }).join('');
+}
+function renderLiveClient() {
+    const c = $('listLclient');
+    if (!allClients.length) { c.innerHTML = '<div class="empty">No live clients yet.</div>'; return; }
+    c.innerHTML = allClients.map(function(cl) {
+        const meta = '<span>📱 ' + esc(cl.phone || '—') + '</span>' +
+                     '<span>📍 ' + esc(cl.city || '—') + '</span>' +
+                     '<span>🌍 ' + esc(cl.country || '—') + '</span>' +
+                     '<span>👤 agent: ' + esc(String(cl.agent_id || '').slice(-8)) + '</span>';
+        return liveCard('👤', cl.name || '—', null, meta);
+    }).join('');
+}
+function renderReviewed() {
+    const items = reviewedOf();
+    const c = $('listReviewed');
+    if (!items.length) { c.innerHTML = '<div class="empty">Nothing reviewed yet.</div>'; return; }
+    c.innerHTML = items.map(function(it) {
+        const d = it.data || {};
+        const icon = it.type === 'agent' ? '🧑‍💼' : (it.type === 'client' ? '👤' : '🏪');
+        const title = d.businessName || d.name || 'Item';
+        const tag = it.status === 'approved'
+            ? '<span style="font-size:.62rem;color:#27ae60;">✅ Approved</span>'
+            : '<span style="font-size:.62rem;color:#e74c3c;">❌ Rejected</span>';
+        return '<div class="card">' +
+            '<div class="top"><span class="title">' + icon + ' ' + esc(title) + '</span>' + tag + '</div>' +
+            '<div class="meta">' +
+                '<span>👤 ' + esc(it.submitted_by || '—') + '</span>' +
+                '<span>🕒 ' + esc(when(it.reviewed_at)) + '</span>' +
+                '<span>🔖 ' + esc(it.reviewed_by || '—') + '</span>' +
+            '</div></div>';
+    }).join('');
+}
+
+/* ============================================================
+   APPROVAL LOGIC
+   ============================================================ */
+async function approveItem(id) {
+    const item = allPending.find(function(p) { return p.id === id; });
+    if (!item) { toast('⚠️ Item not found.'); return; }
+    toast('⏳ Approving…', 1200);
+
+    try {
+        if (item.type === 'business')      await approveBusiness(item);
+        else if (item.type === 'agent')    await approveAgent(item);
+        else if (item.type === 'client')   await approveClient(item);
+        else { toast('⚠️ Unknown item type.'); return; }
+
+        const upd = await sb.from('pending_items').update({
+            status: 'approved',
+            reviewed_at: new Date().toISOString(),
+            reviewed_by: currentAdmin ? (currentAdmin.email || currentAdmin.fullName || 'admin') : 'admin'
+        }).eq('id', id);
+        if (upd.error) throw upd.error;
+
+        toast('✅ Approved — live in the app');
+        await refreshAll();
+    } catch (e) {
+        console.error('approveItem failed:', e);
+        toast('❌ Approval failed: ' + (e.message || 'unknown'));
+    }
+}
+
+async function approveBusiness(item) {
+    const d = item.data || {};
+    if (!d.name) throw new Error('Missing business name.');
+
+    const payload = {
+        local_id: d.id ? String(d.id) : null,
+        name: d.name,
+        contact: d.contact || null,
+        mobile_money: d.mobileMoney || null,
+        type: d.type || 'Other',
+        icon: d.icon || '🏪',
+        website: d.website || null,
+        address: d.address || null,
+        city: d.city || null,
+        country: d.country || null,
+        password: d.password || null,
+        pin: d.pin || null
     };
-    
-    // Client (business) storage
-    function isRegistered() { return localStorage.getItem('clientRegistered') === 'true'; }
-    function saveClient(data) {
-      localStorage.setItem('clientRegistered', 'true');
-      localStorage.setItem('clientData', JSON.stringify(data));
-    }
-    function clearClient() {
-      localStorage.removeItem('clientRegistered');
-      localStorage.removeItem('clientData');
-    }
-    
-    function fillForms(data) {
-      mBiz.value = data.businessName || '';
-      mAddr.value = data.address || '';
-      mId.value = data.identifier || '';
-      mPos.value = data.position || '';
-      serialField.value = data.serialNumber || '--';
-      recipientField.value = data.recipientName || '';
-      dispBiz.innerText = data.businessName || '—';
-      dispAddr.innerText = data.address || '—';
-      dispId.innerText = data.identifier || '—';
-      dispPos.innerText = data.position || '—';
-      dispRec.innerText = data.recipientName || '—';
-    }
-    
-    // Pre-populate registration modal with exact required business details (Fouzan Games)
-    function setExactFouzanDetails() {
-      popupBiz.value = "Fouzan Games and Charging Center";
-      popupAddr.value = "No. 1 Davis Street, Kissy, Freetown";
-      popupEmail.value = "kargboslpha240@game.com";
-      popupRec.value = "Alpha Kargbo";
-      popupId.value = "254596";
-      // Ensure position 'Owner / CEO' selected
-      for(let i=0; i<popupPos.options.length; i++) {
-        if(popupPos.options[i].value === "Owner / CEO") {
-          popupPos.selectedIndex = i;
-          break;
+    const b = await sb.from('businesses').upsert(payload, { onConflict: 'name' }).select().single();
+    if (b.error) throw b.error;
+
+    // Products (if any)
+    if (d.goods && d.goods.length && b.data && b.data.id) {
+        for (let i = 0; i < d.goods.length; i++) {
+            const g = d.goods[i];
+            await sb.from('products').insert({
+                business_id: b.data.id,
+                name: g.name,
+                price: parseFloat(g.price) || 0,
+                quantity: parseInt(g.quantity) || 1,
+                quality: g.quality || 'Brand new',
+                icon: g.icon || d.icon || null
+            });
         }
-      }
-      if(idHint) idHint.innerText = "✓ 6-digit agent code loaded";
-      setTimeout(() => { if(idHint && idHint.innerText === "✓ 6-digit agent code loaded") idHint.innerText = ""; }, 2000);
     }
-    
-    // Load session: if already registered, hide modal; else pre-fill with Fouzan Games data
-    function loadSession() {
-      if (isRegistered()) {
-        const saved = localStorage.getItem('clientData');
-        if (saved) { try { fillForms(JSON.parse(saved)); } catch(e) {} }
-        if (!txField.value) txField.value = genTxId();
-        regModal.style.display = 'none';
-        mainContent.classList.remove('blurred');
-      } else {
-        // Initial registration modal: auto-fill with Fouzan games info
-        setExactFouzanDetails();
-        regModal.style.display = 'flex';
-        mainContent.classList.add('blurred');
-        mBiz.value = ''; mAddr.value = ''; mId.value = ''; mPos.value = '';
-        serialField.value = '--'; recipientField.value = '';
-        dispBiz.innerText = '—'; dispAddr.innerText = '—';
-        dispId.innerText = '—'; dispPos.innerText = '—'; dispRec.innerText = '—';
-        txField.value = '';
-      }
+}
+
+async function approveAgent(item) {
+    const d = item.data || {};
+    if (!d.businessName) throw new Error('Missing business name.');
+
+    const payload = {
+        business_name: d.businessName,
+        business_address: d.businessAddress || null,
+        city: d.city || null,
+        reg_number: d.regNumber || null,
+        business_type: d.businessType || 'Service',
+        owner_name: d.ownerName || null,
+        id_type: d.idType || null,
+        id_number: d.idNumber || null,
+        mobile_money: d.mobileMoney || null,
+        country_code: d.countryCode || null,
+        password: d.password || null,
+        pin: d.pin || null,
+        collateral_amount: parseFloat(d.collateralLimit) || 0,
+        collateral_limit: parseFloat(d.collateralLimit) || 0,
+        currency: d.currency || 'SLL',
+        approved: true,
+        nin: d.nin || null,
+        provider_tx_id: d.providerTxId || null,
+        transfer_code: d.transferCode || null
+    };
+    const a = await sb.from('agents').upsert(payload, { onConflict: 'business_name' }).select().single();
+    if (a.error) throw a.error;
+}
+
+async function approveClient(item) {
+    const d = item.data || {};
+    if (!d.name || !d.phone) throw new Error('Missing client name or phone.');
+    if (!d.agentId) throw new Error('Missing parent agent.');
+
+    const payload = {
+        id: d.id || ('cl_' + Date.now()),
+        agent_id: d.agentId,
+        name: d.name,
+        phone: d.phone,
+        address: d.address || null,
+        city: d.city || null,
+        country: d.country || null
+    };
+    const cl = await sb.from('agent_clients').upsert(payload, { onConflict: 'id' }).select().single();
+    if (cl.error) throw cl.error;
+}
+
+async function rejectItem(id) {
+    const r = await sb.from('pending_items').update({
+        status: 'rejected',
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: currentAdmin ? (currentAdmin.email || currentAdmin.fullName || 'admin') : 'admin'
+    }).eq('id', id);
+    if (r.error) { toast('❌ Reject failed'); return; }
+    toast('🚫 Rejected');
+    await refreshAll();
+}
+
+/* ============================================================
+   TAB SWITCHING (Dashboard)
+   ============================================================ */
+document.querySelectorAll('.tab').forEach(function(t) {
+    t.addEventListener('click', function() {
+        document.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); });
+        document.querySelectorAll('.pane').forEach(function(x) { x.classList.remove('active'); });
+        t.classList.add('active');
+        const pane = $('pane-' + t.getAttribute('data-tab'));
+        if (pane) pane.classList.add('active');
+    });
+});
+
+/* ============================================================
+   REALTIME — auto-refresh on any change
+   ============================================================ */
+let rtChannel = null;
+function subscribeRealtime() {
+    try {
+        rtChannel = sb.channel('admin_dashboard_rt')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'pending_items' },  function() { refreshAll(); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'businesses' },     function() { refreshAll(); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'agents' },         function() { refreshAll(); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'agent_clients' },  function() { refreshAll(); })
+            .subscribe();
+    } catch (e) {
+        console.warn('Realtime subscribe failed:', e);
     }
-    
-    function showPopupErr(msg) {
-      popupErrorSpan.style.display = 'block';
-      popupErrorSpan.innerText = msg;
-      setTimeout(() => popupErrorSpan.style.display = 'none', 3000);
+}
+
+/* ============================================================
+   EVENT WIRING
+   ============================================================ */
+function wireEvents() {
+    // Gate tabs
+    $('tabLogin').addEventListener('click', function() { activateGateTab('login'); });
+    $('tabRegister').addEventListener('click', function() { activateGateTab('register'); });
+    $('swapToRegister').addEventListener('click', function() { activateGateTab('register'); });
+    $('swapToLogin').addEventListener('click', function() { activateGateTab('login'); });
+
+    // Login
+    $('loginBtn').addEventListener('click', tryLogin);
+    $('loginEmail').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') $('loginPassword').focus();
+    });
+    $('loginPassword').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') tryLogin();
+    });
+
+    // Register
+    $('registerBtn').addEventListener('click', tryRegister);
+    $('regConfirm').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') $('regInvite').focus();
+    });
+    $('regInvite').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') tryRegister();
+    });
+
+    // Logout
+    $('logoutBtn').addEventListener('click', logout);
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+(function boot() {
+    wireEvents();
+
+    const saved = loadSession();
+    if (saved) {
+        currentAdmin = saved;
+        showDashboard();
+    } else {
+        setTimeout(function() {
+            const e = $('loginEmail');
+            if (e) e.focus();
+        }, 200);
     }
-    
-    function validateReg() {
-      const biz = popupBiz.value.trim();
-      const addr = popupAddr.value.trim();
-      const email = popupEmail.value.trim();
-      const rec = popupRec.value.trim();
-      const id = popupId.value.trim();
-      const pos = popupPos.value;
-      if (!biz || !addr || !email || !rec || !id || !pos) { showPopupErr("All fields required."); return false; }
-      if (!/^\S+@\S+\.\S+$/.test(email)) { showPopupErr("Invalid email."); return false; }
-      const is9d = /^\d{9}$/.test(id);
-      const is6c = /^[A-Za-z0-9]{6}$/.test(id);
-      if (!is9d && !is6c) { showPopupErr("Identifier: 9 digits or 6 alphanumeric."); return false; }
-      return true;
-    }
-    
-    // Auto-fill trigger for manual button click (also uses exact details)
-    function autoFillRegistration() {
-      setExactFouzanDetails();
-      const modalBody = document.querySelector('#registrationModal .modal-body');
-      let tempMsg = document.querySelector('.auto-fill-feedback');
-      if(tempMsg) tempMsg.remove();
-      const msgDiv = document.createElement('div');
-      msgDiv.innerText = "✅ Fouzan Games & Charging Center details loaded! Proceed to register.";
-      msgDiv.style.background = "#e0f2fe";
-      msgDiv.style.padding = "0.4rem";
-      msgDiv.style.borderRadius = "0.8rem";
-      msgDiv.style.fontSize = "0.7rem";
-      msgDiv.style.marginTop = "0.5rem";
-      msgDiv.style.textAlign = "center";
-      msgDiv.classList.add('auto-fill-feedback');
-      modalBody.appendChild(msgDiv);
-      setTimeout(() => msgDiv.remove(), 2200);
-    }
-    
-    if (autoFillRegBtn) autoFillRegBtn.addEventListener('click', autoFillRegistration);
-    
-    function completeRegistration() {
-      if (!validateReg()) return;
-      const serialNum = `FZ-${String(serialCounter).padStart(5,'0')}`;
-      const clientData = {
-        businessName: popupBiz.value.trim(),
-        address: popupAddr.value.trim(),
-        email: popupEmail.value.trim(),
-        recipientName: popupRec.value.trim(),
-        identifier: popupId.value.trim(),
-        position: popupPos.value,
-        serialNumber: serialNum,
-        registeredAt: new Date().toISOString()
-      };
-      saveClient(clientData);
-      fillForms(clientData);
-      incrementSerial();
-      txField.value = genTxId();
-      regModal.style.display = 'none';
-      mainContent.classList.remove('blurred');
-      
-      // Optionally send registration data
-      const fd = new FormData();
-      fd.append("type", "client_registration");
-      fd.append("business_name", clientData.businessName);
-      fd.append("address", clientData.address);
-      fd.append("email", clientData.email);
-      fd.append("recipient_name", clientData.recipientName);
-      fd.append("identifier", clientData.identifier);
-      fd.append("position", clientData.position);
-      fd.append("assigned_serial", clientData.serialNumber);
-      fetch(REGISTRATION_ENDPOINT, { method: "POST", body: fd }).catch(e=>console.log);
-    }
-    
-    function resetMerchantOnly() {
-      amount.value = '';
-      bizCat.value = '';
-      agreeRadios.forEach(r => r.checked = false);
-      amountErr.innerText = '';
-      ussdArea.style.display = 'none';
-      txField.value = genTxId();
-      txErr.innerText = '';
-      if (isRegistered()) {
-        const saved = localStorage.getItem('clientData');
-        if (saved) {
-          try { recipientField.value = JSON.parse(saved).recipientName || ''; } catch(e) {}
-        }
-      }
-    }
-    
-    function fullReset() {
-      clearClient();
-      mBiz.value = ''; mAddr.value = ''; mId.value = ''; mPos.value = '';
-      serialField.value = '--';
-      recipientField.value = '';
-      resetMerchantOnly();
-      policyOkFlag = false;
-      policyStatusSpan.innerHTML = "⚠️ Not confirmed";
-      policyStatusSpan.style.color = "#b91c1c";
-      dispBiz.innerText = '—'; dispAddr.innerText = '—';
-      dispId.innerText = '—'; dispPos.innerText = '—'; dispRec.innerText = '—';
-      txField.value = '';
-      ussdArea.style.display = 'none';
-      feedback.style.display = 'none';
-      regModal.style.display = 'flex';
-      mainContent.classList.add('blurred');
-      setExactFouzanDetails();   // re-populate modal with Fouzan details
-    }
-    
-    // USSD builder using identifier (phone number)
-    function buildUssd() {
-      const phone = mId.value.trim();
-      const amtVal = amount.value.trim();
-      if (!phone) { showFeedback("Identifier missing (9-digit phone required)", "error"); return null; }
-      if (!amtVal || isNaN(amtVal) || parseInt(amtVal) <= 0) {
-        amountErr.innerText = "Valid amount needed";
-        showFeedback("Enter valid amount", "error");
-        return null;
-      }
-      amountErr.innerText = "";
-      if (!/^\d{9}$/.test(phone)) { 
-        // if identifier is 6 digit code, we can treat but USSD requires phone. Show message
-        showFeedback("USSD requires 9-digit mobile number. Please update registration with a valid phone.", "error");
-        return null;
-      }
-      const pref = phone.substring(0,3);
-      const num = parseInt(amtVal);
-      if (GROUP_ONE.includes(pref)) return `#144*2*1*${phone}*${num}*${num}#`;
-      if (GROUP_TWO.includes(pref)) return `*161*1*1*${phone}*${num}*0000#`;
-      showFeedback(`Prefix ${pref} not supported`, "error");
-      return null;
-    }
-    
-    function dialNow(ussd) { window.location.href = `tel:${encodeURIComponent(ussd)}`; }
-    function handleRelease() {
-      if (!txField.value) { showFeedback("Generate Transaction ID first", "error"); return; }
-      const code = buildUssd();
-      if (code) { ussdCodeSpan.innerText = code; ussdArea.style.display = 'block'; dialNow(code); }
-      else ussdArea.style.display = 'none';
-    }
-    
-    function showFeedback(msg, type) {
-      feedback.style.display = 'block';
-      feedback.innerHTML = msg;
-      feedback.style.background = type === 'error' ? '#fee2e2' : '#e0f2fe';
-      feedback.style.borderLeft = `4px solid ${type === 'error' ? '#dc2626' : '#0284c7'}`;
-      if (type !== 'error') setTimeout(() => feedback.style.display = 'none', 5000);
-    }
-    
-    async function processPay() {
-      feedback.style.display = 'none';
-      ussdArea.style.display = 'none';
-      const biz = mBiz.value.trim(), addr = mAddr.value.trim(), iden = mId.value.trim(), pos = mPos.value.trim();
-      const serial = serialField.value.trim(), amt = amount.value.trim(), rec = recipientField.value.trim(), cat = bizCat.value, tx = txField.value.trim();
-      let agree = null;
-      for (let r of agreeRadios) if (r.checked) { agree = r.value; break; }
-      let clientEmail = "";
-      const stored = localStorage.getItem('clientData');
-      if (stored) { try { clientEmail = JSON.parse(stored).email || ""; } catch(e) {} }
-      if (!biz || !addr || !iden || !pos) { showFeedback("Business profile missing. Re-register.", "error"); return; }
-      if (!clientEmail) { showFeedback("Email missing. Re-register.", "error"); return; }
-      if (!amt || isNaN(amt) || parseInt(amt) <= 0) { amountErr.innerText = "Valid amount"; showFeedback("Enter amount", "error"); return; }
-      if (!rec) { showFeedback("Recipient name missing", "error"); return; }
-      if (!cat) { showFeedback("Select transaction purpose", "error"); return; }
-      if (!tx || !/^FG\d{6}\.\d{4}\.T\d{6}$/.test(tx)) { txErr.innerText = "Invalid TX format"; showFeedback("Invalid Transaction ID", "error"); return; }
-      if (agree !== "Yes") { showFeedback("Must confirm transaction agreement", "error"); return; }
-      if (!policyOkFlag) { showFeedback("Please accept the policy terms", "error"); return; }
-      if (!serial || serial === "--") { showFeedback("Serial number missing", "error"); return; }
-      
-      const formData = new FormData();
-      formData.append("type", "payment_submission");
-      formData.append("business_name", biz); formData.append("address", addr); formData.append("identifier", iden);
-      formData.append("position", pos); formData.append("email", clientEmail); formData.append("serial_number", serial);
-      formData.append("amount", amt); formData.append("recipient_name", rec); formData.append("category", cat);
-      formData.append("transaction_id", tx); formData.append("transaction_agreement", agree); formData.append("policy_confirmed", "Yes");
-      
-      pay.innerHTML = "⏳ Processing..."; pay.disabled = true;
-      try {
-        const res = await fetch(MERCHANT_ENDPOINT, { method: "POST", body: formData, headers: { 'Accept': 'application/json' } });
-        if (res.ok) { showFeedback(`✅ Payment submitted! Serial: ${serial} | TX: ${tx}`, "success"); resetMerchantOnly(); }
-        else { let err = await res.text(); showFeedback(`❌ Server error: ${err.substring(0,100)}`, "error"); }
-      } catch(e) { showFeedback(`Network error: ${e.message}`, "error"); }
-      finally { pay.innerHTML = "💰 PAY / SUBMIT"; pay.disabled = false; }
-    }
-    
-    // Event Listeners
-    regBtn.onclick = completeRegistration;
-    resetAllBtn.onclick = fullReset;
-    genTx.onclick = () => { txField.value = genTxId(); txErr.innerText = ""; showFeedback("New Transaction ID generated", "info"); };
-    release.onclick = handleRelease;
-    copyUssd.onclick = () => { if (ussdCodeSpan.innerText) { navigator.clipboard.writeText(ussdCodeSpan.innerText); copyUssd.innerText = "✅ Copied!"; setTimeout(() => copyUssd.innerText = "📋 Copy", 1500); } };
-    dialUssd.onclick = () => { if (ussdCodeSpan.innerText) dialNow(ussdCodeSpan.innerText); else showFeedback("No USSD", "error"); };
-    pay.onclick = processPay;
-    amount.oninput = () => { if (amount.value && parseInt(amount.value) > 0) amountErr.innerText = ""; else if (amount.value) amountErr.innerText = "Positive number"; else amountErr.innerText = ""; };
-    popupId.oninput = () => { const v = popupId.value.trim(); if (/^\d{9}$/.test(v)) idHint.innerText = "✓ Valid phone"; else if (/^[A-Za-z0-9]{6}$/.test(v)) idHint.innerText = "✓ Valid agent code"; else if (v.length > 0) idHint.innerText = "⚠️ 9 digits or 6 chars"; else idHint.innerText = ""; };
-    
-    loadSerial();
-    loadSession();
-  })();
+    console.log('🚀 Admin dashboard ready');
+})();
 </script>
 </body>
 </html>
